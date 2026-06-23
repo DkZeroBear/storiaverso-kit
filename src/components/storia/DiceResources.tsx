@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Dice5, Plus, Trash2, Minus, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePersistedState, uid, pushLog } from "@/lib/storia/storage";
@@ -33,21 +33,72 @@ export default function DiceResources({ onSaved }: Props) {
   );
 }
 
+function playDiceSound() {
+  try {
+    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    oscillator.type = "square";
+    oscillator.frequency.setValueAtTime(150, ctx.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.1);
+    gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + 0.15);
+  } catch {
+    /* noop */
+  }
+}
+
+function Dice3D({ rolling, faceLabel }: { rolling: boolean; faceLabel: string }) {
+  return (
+    <div className="dice-stage">
+      <div className={`dice-cube${rolling ? " dice-rolling" : ""}`}>
+        <div className="dice-face f1">{faceLabel}</div>
+        <div className="dice-face f2">{faceLabel}</div>
+        <div className="dice-face f3">{faceLabel}</div>
+        <div className="dice-face f4">{faceLabel}</div>
+        <div className="dice-face f5">{faceLabel}</div>
+        <div className="dice-face f6">{faceLabel}</div>
+      </div>
+    </div>
+  );
+}
+
 function DiceMode({ onSaved }: Props) {
   const [type, setType] = useState("D6");
   const [qty, setQty] = useState(1);
   const [mod, setMod] = useState(0);
   const [result, setResult] = useState<{ total: number; rolls: number[]; mod: number; type: string; qty: number } | null>(null);
+  const [rolling, setRolling] = useState(false);
   const [log, setLog] = usePersistedState<LogEntry[]>(STORAGE_KEYS.diceLog, () => [], onSaved);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const roll = () => {
+    if (rolling) return;
     const sides = parseInt(type.replace("D", ""), 10);
     const rolls = Array.from({ length: qty }, () => 1 + Math.floor(Math.random() * sides));
     const total = rolls.reduce((a, b) => a + b, 0) + mod;
-    setResult({ total, rolls, mod, type, qty });
-    const text = `${qty}${type}${mod ? (mod > 0 ? `+${mod}` : mod) : ""} → ${total} [${rolls.join(", ")}]${mod ? ` ${mod > 0 ? "+" : ""}${mod}` : ""}`;
-    setLog(pushLog(log, { id: uid(), ts: Date.now(), text }));
+
+    playDiceSound();
+    setResult(null);
+    setRolling(true);
+
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      setRolling(false);
+      setResult({ total, rolls, mod, type, qty });
+      const text = `${qty}${type}${mod ? (mod > 0 ? `+${mod}` : mod) : ""} → ${total} [${rolls.join(", ")}]${mod ? ` ${mod > 0 ? "+" : ""}${mod}` : ""}`;
+      setLog(pushLog(log, { id: uid(), ts: Date.now(), text }));
+    }, 1200);
   };
+
+  // Face label during animation: type abbreviation. After roll: first die.
+  const faceLabel = rolling ? type : (result ? String(result.rolls[0]) : type);
 
   return (
     <div className="grid md:grid-cols-[1fr_320px] gap-6">
@@ -56,23 +107,29 @@ function DiceMode({ onSaved }: Props) {
           <div className="grid grid-cols-3 gap-3 mb-6">
             <label>
               <span className="text-xs uppercase tracking-wider text-[color:var(--muted-foreground)]">Tipo</span>
-              <select className="field-input" value={type} onChange={(e) => setType(e.target.value)}>
+              <select className="field-input" value={type} onChange={(e) => setType(e.target.value)} disabled={rolling}>
                 {["D4", "D6", "D8", "D10", "D12", "D20", "D100"].map((t) => <option key={t}>{t}</option>)}
               </select>
             </label>
             <label>
               <span className="text-xs uppercase tracking-wider text-[color:var(--muted-foreground)]">Quantidade</span>
-              <input type="number" min={1} max={10} className="field-input" value={qty} onChange={(e) => setQty(Math.max(1, Math.min(10, +e.target.value || 1)))} />
+              <input type="number" min={1} max={10} className="field-input" value={qty} onChange={(e) => setQty(Math.max(1, Math.min(10, +e.target.value || 1)))} disabled={rolling} />
             </label>
             <label>
               <span className="text-xs uppercase tracking-wider text-[color:var(--muted-foreground)]">Modificador</span>
-              <input type="number" className="field-input" value={mod} onChange={(e) => setMod(+e.target.value || 0)} />
+              <input type="number" className="field-input" value={mod} onChange={(e) => setMod(+e.target.value || 0)} disabled={rolling} />
             </label>
           </div>
-          <Button onClick={roll} size="lg" className="w-full"><Dice5 size={16} />Rolar</Button>
+          <Button type="button" onClick={roll} size="lg" className="w-full" disabled={rolling}>
+            <Dice5 size={16} />{rolling ? "Rolando..." : "Rolar"}
+          </Button>
 
-          {result && (
-            <div className="mt-8 text-center">
+          <div className="mt-8 min-h-[120px] flex items-center justify-center">
+            {(rolling || result) && <Dice3D rolling={rolling} faceLabel={faceLabel} />}
+          </div>
+
+          {!rolling && result && (
+            <div className="mt-4 text-center dice-result-in">
               <div className="font-serif text-[64px] leading-none text-[color:var(--amber-accent)]">{result.total}</div>
               <div className="mt-3 text-sm text-[color:var(--muted-foreground)]">
                 {result.qty}{result.type}{result.mod ? (result.mod > 0 ? `+${result.mod}` : result.mod) : ""} → [{result.rolls.join(", ")}]{result.mod ? ` ${result.mod > 0 ? "+" : ""}${result.mod}` : ""}
