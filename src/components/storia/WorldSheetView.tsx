@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Plus, Trash2, Download, Upload, Sparkles, ChevronDown } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Plus, Trash2, Download, Upload, Sparkles, ChevronDown, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { uid } from "@/lib/storia/storage";
 import { generateExpansion } from "@/lib/ai-expansion.functions";
