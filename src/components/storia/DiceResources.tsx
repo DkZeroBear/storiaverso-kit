@@ -300,18 +300,33 @@ function DiceMode({ onSaved }: Props) {
             <Dice5 size={16} />{rolling ? "Rolando..." : `Rolar ${qty}${activeType}`}
           </Button>
 
-          <div className="mt-8 min-h-[180px] flex items-center justify-center">
-            <DiceRenderer sides={sidesOf(activeType)} isRolling={rolling} onRollComplete={handleRollComplete} size={160} />
+          <div className="mt-8 min-h-[180px] flex items-center justify-center relative">
+            {isConventional(sidesOf(activeType)) ? (
+              <DiceRenderer sides={sidesOf(activeType)} isRolling={rolling} onRollComplete={handleRollComplete} size={160} />
+            ) : (
+              <UnknownDice
+                sides={sidesOf(activeType)}
+                isRolling={rolling}
+                showResult={!rolling && !!result}
+                result={result?.total ?? null}
+                onRollComplete={handleRollComplete}
+              />
+            )}
+            {!rolling && result && isConventional(sidesOf(activeType)) && (
+              <div className="dice-result-overlay">
+                <span className="dice-result-overlay-number">{result.total}</span>
+              </div>
+            )}
           </div>
 
           {!rolling && result && (
             <div className="mt-4 text-center dice-result-in">
-              <div className="font-serif text-[64px] leading-none text-[color:var(--amber-accent)]">{result.total}</div>
-              <div className="mt-3 text-sm text-[color:var(--muted-foreground)]">
+              <div className="mt-1 text-sm text-[color:var(--muted-foreground)]">
                 {result.qty}{result.type}{result.mod ? (result.mod > 0 ? `+${result.mod}` : result.mod) : ""} → [{result.rolls.join(", ")}]{result.mod ? ` ${result.mod > 0 ? "+" : ""}${result.mod}` : ""}
               </div>
             </div>
           )}
+
         </div>
       </div>
       <DiceLog log={log} onClear={() => setLog([])} />
