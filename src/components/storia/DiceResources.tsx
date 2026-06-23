@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Dice5, Plus, Trash2, Minus, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePersistedState, uid, pushLog } from "@/lib/storia/storage";
