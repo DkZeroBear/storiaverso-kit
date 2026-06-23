@@ -207,56 +207,7 @@ export default function WorldSheetView({ sheet, setSheet }: Props) {
   const generateAI = async () => {
     setAiError(""); setAiLoading(true); setAiOut("");
     try {
-      // ATENÇÃO: uso local apenas — nunca commitar em repositório público
-      const ANTHROPIC_API_KEY = "SUA_CHAVE_AQUI";
-      const prompt = `Você é um assistente do framework STORIAverso de worldbuilding e RPG.
-Com base nos dados do mundo abaixo, gere uma expansão narrativa com exatamente estas seções:
-
-**Segredo oculto do mundo**
-[1 parágrafo — algo que contradiz ou aprofunda o que foi construído]
-
-**Dois locais icônicos**
-1. [nome]: [descrição em 2-3 linhas — habitat, atmosfera, função narrativa]
-2. [nome]: [descrição em 2-3 linhas]
-
-**Mito fundador**
-[1 parágrafo — uma lenda que os povos contam sobre a origem de algo]
-
-**Dois ganchos de aventura**
-1. [gancho — situação concreta que exige decisão dos personagens]
-2. [gancho]
-
-**Verbos centrais sugeridos para o sistema de RPG**
-[3 a 5 verbos com justificativa breve de por que emergem desse mundo]
-
-**Uma contradição potencial entre pilares**
-[algo que pode ser um conflito narrativo interessante — não um erro]
-
-Seja coerente com o tom e a mitologia definidos. Sem texto fora dessas seções.
-
-Dados do mundo:
-${preview}`;
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-api-key": ANTHROPIC_API_KEY,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-5",
-          max_tokens: 1000,
-          messages: [{ role: "user", content: prompt }],
-        }),
-      });
-
-      if (!res.ok) {
-        const t = await res.text();
-        throw new Error(`Erro da API (${res.status}): ${t.slice(0, 200)}`);
-      }
-      const data = await res.json();
-      const text = data?.content?.[0]?.text ?? "(resposta vazia)";
+      const { text } = await generateExpansion({ data: { preview } });
       setAiOut(text);
     } catch (e) {
       setAiError(e instanceof Error ? e.message : String(e));
@@ -264,6 +215,7 @@ ${preview}`;
       setAiLoading(false);
     }
   };
+
 
   const exportJSON = () => {
     const name = (sheet.world_name || "mundo").toLowerCase().replace(/\s+/g, "-");
