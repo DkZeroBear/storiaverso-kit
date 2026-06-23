@@ -300,8 +300,8 @@ function DiceMode({ onSaved }: Props) {
             <Dice5 size={16} />{rolling ? "Rolando..." : `Rolar ${qty}${activeType}`}
           </Button>
 
-          <div className="mt-8 min-h-[140px] flex items-center justify-center">
-            {(rolling || result) && <DiceVisual rolling={rolling} type={activeType} result={faceResult} />}
+          <div className="mt-8 min-h-[180px] flex items-center justify-center">
+            <DiceRenderer sides={sidesOf(activeType)} isRolling={rolling} onRollComplete={handleRollComplete} size={160} />
           </div>
 
           {!rolling && result && (
