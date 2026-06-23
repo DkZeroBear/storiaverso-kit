@@ -219,7 +219,7 @@ function DiceMode({ onSaved }: Props) {
   const [result, setResult] = useState<{ total: number; rolls: number[]; mod: number; type: string; qty: number } | null>(null);
   const [rolling, setRolling] = useState(false);
   const [log, setLog] = usePersistedState<LogEntry[]>(STORAGE_KEYS.diceLog, () => [], onSaved);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
 
   const isCustom = !QUICK_TYPES.includes(type);
   const activeType = isCustom ? `D${customN}` : type;
