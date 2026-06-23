@@ -218,7 +218,7 @@ export default function WorldSheetView({ sheet, setSheet }: Props) {
   const generateAI = async () => {
     setAiError(""); setAiLoading(true); setAiOut("");
     try {
-      const { text } = await generateExpansion({ data: { preview } });
+      const { text } = await generateExpansion({ data: { preview, anthropicApiKey: aiKey || undefined } });
       setAiOut(text);
     } catch (e) {
       setAiError(e instanceof Error ? e.message : String(e));
