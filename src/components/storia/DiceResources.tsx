@@ -12,6 +12,8 @@ interface Props {
 
 const fmtTime = (ts: number) => new Date(ts).toLocaleTimeString("pt-BR", { hour12: false });
 
+const QUICK_TYPES = ["D2", "D3", "D4", "D5", "D6", "D8", "D10", "D12", "D20", "D100"];
+
 export default function DiceResources({ onSaved }: Props) {
   const [mode, setMode] = useState<Mode>("dice");
 
@@ -74,45 +76,143 @@ function DicePips({ value }: { value: number }) {
   );
 }
 
-function Dice3D({ rolling, type, result }: { rolling: boolean; type: string; result: string }) {
+/* ---------- Cube dice (D6 / D3) ---------- */
+function CubeDice({ rolling, type, result, faceValues }: { rolling: boolean; type: string; result: string; faceValues: (number | string)[] }) {
   const isD6 = type === "D6";
-  const typeMark = <span className="dice-type-mark">{type}</span>;
+  const renderFace = (idx: number) => {
+    const v = faceValues[idx];
+    if (isD6 && typeof v === "number") return <DicePips value={v} />;
+    return <span className="dice-type-mark">{type}</span>;
+  };
   return (
     <div className="dice-container">
       <div className={`dice-cube${rolling ? " dice-rolling" : ""}`}>
         <div className="dice-face face-front">
           <div className="dice-face-content">
-            {isD6
-              ? rolling
-                ? <DicePips value={6} />
-                : <span className="result-number">{result || type}</span>
-              : rolling
-                ? typeMark
-                : <span className="result-number">{result || type}</span>}
+            {rolling || !result ? renderFace(0) : <span className="result-number">{result}</span>}
           </div>
         </div>
-        <div className="dice-face face-back">
-          <div className="dice-face-content">{isD6 ? <DicePips value={1} /> : typeMark}</div>
-        </div>
-        <div className="dice-face face-left">
-          <div className="dice-face-content">{isD6 ? <DicePips value={2} /> : typeMark}</div>
-        </div>
-        <div className="dice-face face-right">
-          <div className="dice-face-content">{isD6 ? <DicePips value={5} /> : typeMark}</div>
-        </div>
-        <div className="dice-face face-top">
-          <div className="dice-face-content">{isD6 ? <DicePips value={3} /> : typeMark}</div>
-        </div>
-        <div className="dice-face face-bottom">
-          <div className="dice-face-content">{isD6 ? <DicePips value={4} /> : typeMark}</div>
-        </div>
+        <div className="dice-face face-back"><div className="dice-face-content">{renderFace(1)}</div></div>
+        <div className="dice-face face-left"><div className="dice-face-content">{renderFace(2)}</div></div>
+        <div className="dice-face face-right"><div className="dice-face-content">{renderFace(3)}</div></div>
+        <div className="dice-face face-top"><div className="dice-face-content">{renderFace(4)}</div></div>
+        <div className="dice-face face-bottom"><div className="dice-face-content">{renderFace(5)}</div></div>
       </div>
     </div>
   );
 }
 
+/* ---------- Coin (D2) ---------- */
+function CoinDice({ rolling, result }: { rolling: boolean; result: string }) {
+  return (
+    <div className="dice-container">
+      <div className={`coin${rolling ? " coin-flipping" : ""}`}>
+        <svg viewBox="0 0 80 80" width="80" height="80">
+          <circle cx="40" cy="40" r="36" fill="#1e293b" stroke="#c4843a" strokeWidth="1.5" />
+        </svg>
+        {!rolling && result && (
+          <div className="dice-overlay-number dice-result-in">{result}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Polyhedral SVG dice ---------- */
+function PolyShape({ type }: { type: string }) {
+  const stroke = "#c4843a";
+  const fill = "#1e293b";
+  switch (type) {
+    case "D4":
+      return (
+        <svg viewBox="0 0 80 80" width="80" height="80">
+          <polygon points="40,5 75,70 5,70" fill={fill} stroke={stroke} strokeWidth="1.5" strokeLinejoin="round" />
+          <line x1="40" y1="70" x2="40" y2="5" stroke={stroke} strokeWidth="0.5" opacity="0.3" />
+        </svg>
+      );
+    case "D8":
+      return (
+        <svg viewBox="0 0 80 80" width="80" height="80">
+          <polygon points="40,4 76,40 40,76 4,40" fill={fill} stroke={stroke} strokeWidth="1.5" />
+          <line x1="4" y1="40" x2="76" y2="40" stroke={stroke} strokeWidth="0.5" opacity="0.4" />
+        </svg>
+      );
+    case "D10":
+    case "D5":
+      return (
+        <svg viewBox="0 0 80 80" width="80" height="80">
+          <polygon points="40,4 74,28 62,68 18,68 6,28" fill={fill} stroke={stroke} strokeWidth="1.5" />
+          <line x1="40" y1="4" x2="40" y2="68" stroke={stroke} strokeWidth="0.5" opacity="0.3" />
+        </svg>
+      );
+    case "D12":
+      return (
+        <svg viewBox="0 0 80 80" width="80" height="80">
+          <polygon points="40,4 73,27 61,67 19,67 7,27" fill={fill} stroke={stroke} strokeWidth="1.5" />
+          <polygon points="40,20 58,33 51,53 29,53 22,33" fill="none" stroke={stroke} strokeWidth="0.5" opacity="0.3" />
+        </svg>
+      );
+    case "D20":
+      return (
+        <svg viewBox="0 0 80 80" width="80" height="80">
+          <polygon points="40,3 77,68 3,68" fill={fill} stroke={stroke} strokeWidth="1.5" strokeLinejoin="round" />
+          <polygon points="40,33 60,68 20,68" fill="none" stroke={stroke} strokeWidth="0.5" opacity="0.35" />
+          <line x1="40" y1="3" x2="20" y2="68" stroke={stroke} strokeWidth="0.5" opacity="0.35" />
+          <line x1="40" y1="3" x2="60" y2="68" stroke={stroke} strokeWidth="0.5" opacity="0.35" />
+          <line x1="40" y1="33" x2="3" y2="68" stroke={stroke} strokeWidth="0.5" opacity="0.35" />
+          <line x1="40" y1="33" x2="77" y2="68" stroke={stroke} strokeWidth="0.5" opacity="0.35" />
+        </svg>
+      );
+    case "D100":
+      return (
+        <svg viewBox="0 0 80 80" width="80" height="80">
+          <circle cx="40" cy="40" r="36" fill={fill} stroke={stroke} strokeWidth="1.5" />
+          <circle cx="40" cy="40" r="22" fill="none" stroke={stroke} strokeWidth="0.5" strokeDasharray="3 3" opacity="0.4" />
+        </svg>
+      );
+    default:
+      // DN custom
+      return (
+        <svg viewBox="0 0 80 80" width="80" height="80">
+          <circle cx="40" cy="40" r="36" fill={fill} stroke={stroke} strokeWidth="1.5" strokeDasharray="4 3" />
+        </svg>
+      );
+  }
+}
+
+function PolyDice({ rolling, type, result }: { rolling: boolean; type: string; result: string }) {
+  return (
+    <div className="dice-container">
+      <div className={`poly-dice${rolling ? " dice-rolling" : ""}`}>
+        <PolyShape type={type} />
+        {rolling && <div className="dice-overlay-mark">{type}</div>}
+      </div>
+      {!rolling && result && (
+        <div className="dice-overlay-number-static dice-result-in">{result}</div>
+      )}
+    </div>
+  );
+}
+
+function DiceVisual({ rolling, type, result }: { rolling: boolean; type: string; result: string }) {
+  if (type === "D2") return <CoinDice rolling={rolling} result={result} />;
+  if (type === "D6") {
+    return <CubeDice rolling={rolling} type={type} result={result} faceValues={[6, 1, 2, 5, 3, 4]} />;
+  }
+  if (type === "D3") {
+    return <CubeDice rolling={rolling} type={type} result={result} faceValues={[1, 2, 3, 1, 2, 3]} />;
+  }
+  return <PolyDice rolling={rolling} type={type} result={result} />;
+}
+
+function sidesOf(type: string): number {
+  const n = parseInt(type.replace("D", ""), 10);
+  return Number.isFinite(n) && n >= 2 ? n : 6;
+}
+
 function DiceMode({ onSaved }: Props) {
   const [type, setType] = useState("D6");
+  const [customN, setCustomN] = useState<number>(7);
   const [qty, setQty] = useState(1);
   const [mod, setMod] = useState(0);
   const [result, setResult] = useState<{ total: number; rolls: number[]; mod: number; type: string; qty: number } | null>(null);
@@ -120,9 +220,12 @@ function DiceMode({ onSaved }: Props) {
   const [log, setLog] = usePersistedState<LogEntry[]>(STORAGE_KEYS.diceLog, () => [], onSaved);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const isCustom = !QUICK_TYPES.includes(type);
+  const activeType = isCustom ? `D${customN}` : type;
+
   const roll = () => {
     if (rolling) return;
-    const sides = parseInt(type.replace("D", ""), 10);
+    const sides = sidesOf(activeType);
     const rolls = Array.from({ length: qty }, () => 1 + Math.floor(Math.random() * sides));
     const total = rolls.reduce((a, b) => a + b, 0) + mod;
 
@@ -133,8 +236,8 @@ function DiceMode({ onSaved }: Props) {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
       setRolling(false);
-      setResult({ total, rolls, mod, type, qty });
-      const text = `${qty}${type}${mod ? (mod > 0 ? `+${mod}` : mod) : ""} → ${total} [${rolls.join(", ")}]${mod ? ` ${mod > 0 ? "+" : ""}${mod}` : ""}`;
+      setResult({ total, rolls, mod, type: activeType, qty });
+      const text = `${qty}${activeType}${mod ? (mod > 0 ? `+${mod}` : mod) : ""} → ${total} [${rolls.join(", ")}]${mod ? ` ${mod > 0 ? "+" : ""}${mod}` : ""}`;
       setLog(pushLog(log, { id: uid(), ts: Date.now(), text }));
     }, 1200);
   };
@@ -145,13 +248,40 @@ function DiceMode({ onSaved }: Props) {
     <div className="grid md:grid-cols-[1fr_320px] gap-6">
       <div>
         <div className="grimoire-card p-6">
-          <div className="grid grid-cols-3 gap-3 mb-6">
-            <label>
-              <span className="text-xs uppercase tracking-wider text-[color:var(--muted-foreground)]">Tipo</span>
-              <select className="field-input" value={type} onChange={(e) => setType(e.target.value)} disabled={rolling}>
-                {["D4", "D6", "D8", "D10", "D12", "D20", "D100"].map((t) => <option key={t}>{t}</option>)}
-              </select>
-            </label>
+          <div className="mb-4">
+            <span className="text-xs uppercase tracking-wider text-[color:var(--muted-foreground)] block mb-2">Tipo</span>
+            <div className="flex flex-wrap gap-1.5">
+              {QUICK_TYPES.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  disabled={rolling}
+                  onClick={() => setType(t)}
+                  className={`dice-type-btn${type === t ? " dice-type-btn-active" : ""}`}
+                >
+                  {t}
+                </button>
+              ))}
+              <div className={`dice-type-custom${isCustom ? " dice-type-btn-active" : ""}`}>
+                <span className="text-xs opacity-60">DN</span>
+                <input
+                  type="number"
+                  min={2}
+                  value={customN}
+                  disabled={rolling}
+                  onChange={(e) => {
+                    const v = Math.max(2, parseInt(e.target.value, 10) || 2);
+                    setCustomN(v);
+                    setType(`custom`);
+                  }}
+                  onFocus={() => setType("custom")}
+                  className="bg-transparent w-14 text-sm text-[color:var(--amber-accent)] outline-none border-b border-[color:var(--border)] focus:border-[color:var(--amber-accent)]"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 mb-6">
             <label>
               <span className="text-xs uppercase tracking-wider text-[color:var(--muted-foreground)]">Quantidade</span>
               <input type="number" min={1} max={10} className="field-input" value={qty} onChange={(e) => setQty(Math.max(1, Math.min(10, +e.target.value || 1)))} disabled={rolling} />
@@ -161,12 +291,13 @@ function DiceMode({ onSaved }: Props) {
               <input type="number" className="field-input" value={mod} onChange={(e) => setMod(+e.target.value || 0)} disabled={rolling} />
             </label>
           </div>
+
           <Button type="button" onClick={roll} size="lg" className="w-full" disabled={rolling}>
-            <Dice5 size={16} />{rolling ? "Rolando..." : "Rolar"}
+            <Dice5 size={16} />{rolling ? "Rolando..." : `Rolar ${qty}${activeType}`}
           </Button>
 
-          <div className="mt-8 min-h-[120px] flex items-center justify-center">
-            {(rolling || result) && <Dice3D rolling={rolling} type={type} result={faceResult} />}
+          <div className="mt-8 min-h-[140px] flex items-center justify-center">
+            {(rolling || result) && <DiceVisual rolling={rolling} type={activeType} result={faceResult} />}
           </div>
 
           {!rolling && result && (

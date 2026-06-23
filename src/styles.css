@@ -120,16 +120,17 @@
   perspective: 400px;
   perspective-origin: 50% 50%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 140px;
+  min-height: 140px;
+  position: relative;
 }
 .dice-cube {
   position: relative;
   width: 80px;
   height: 80px;
   transform-style: preserve-3d;
-  transform: rotateX(-20deg) rotateY(20deg);
 }
 .dice-face {
   position: absolute;
@@ -145,7 +146,11 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 0 12px rgba(0, 0, 0, 0.5);
 }
 .dice-face-content {
-  transform: rotateZ(180deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 .face-front  { transform: rotateY(0deg)    translateZ(40px); }
 .face-back   { transform: rotateY(180deg)  translateZ(40px); }
@@ -159,11 +164,12 @@
   font-weight: 700;
   font-size: 28px;
   color: var(--amber-accent);
+  user-select: none;
 }
 .dice-type-mark {
   font-family: var(--font-serif);
   font-weight: 700;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--amber-accent);
   opacity: 0.4;
 }
@@ -192,17 +198,107 @@
   0%   { transform: rotateX(0deg)   rotateY(0deg)   rotateZ(0deg); }
   20%  { transform: rotateX(180deg) rotateY(90deg)  rotateZ(45deg); }
   40%  { transform: rotateX(360deg) rotateY(270deg) rotateZ(90deg); }
-  60%  { transform: rotateX(540deg) rotateY(180deg) rotateZ(135deg); }
-  80%  { transform: rotateX(630deg) rotateY(330deg) rotateZ(160deg); }
-  100% { transform: rotateX(720deg) rotateY(360deg) rotateZ(180deg); }
+  60%  { transform: rotateX(540deg) rotateY(180deg) rotateZ(45deg); }
+  80%  { transform: rotateX(630deg) rotateY(330deg) rotateZ(20deg); }
+  100% { transform: rotateX(720deg) rotateY(360deg) rotateZ(0deg); }
 }
 .dice-rolling {
   animation: diceRoll 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
+
+/* Polyhedral SVG dice */
+.poly-dice {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  transform-style: preserve-3d;
+}
+.dice-overlay-mark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--amber-accent);
+  opacity: 0.4;
+  pointer-events: none;
+}
+.dice-overlay-number-static {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 26px;
+  color: var(--amber-accent);
+  pointer-events: none;
+}
+
+/* Coin (D2) */
+.coin {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  transform-style: preserve-3d;
+}
+@keyframes coinFlip {
+  0%   { transform: rotateY(0deg); }
+  100% { transform: rotateY(1080deg); }
+}
+.coin-flipping {
+  animation: coinFlip 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+.dice-overlay-number {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 28px;
+  color: var(--amber-accent);
+  pointer-events: none;
+}
+
 @keyframes diceFadeIn {
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .dice-result-in {
   animation: diceFadeIn 0.2s ease-out both;
+}
+
+/* Dice type selector */
+.dice-type-btn {
+  font-family: var(--font-serif);
+  font-size: 0.85rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: var(--radius-md);
+  border: 0.5px solid var(--border);
+  background: var(--input);
+  color: var(--foreground);
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.dice-type-btn:hover:not(:disabled) {
+  border-color: var(--amber-accent);
+}
+.dice-type-btn-active {
+  border-color: var(--amber-accent) !important;
+  background: rgba(196, 132, 58, 0.12) !important;
+  color: var(--amber-accent) !important;
+}
+.dice-type-custom {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-md);
+  border: 0.5px solid var(--border);
+  background: var(--input);
 }
