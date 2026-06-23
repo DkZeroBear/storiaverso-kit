@@ -3,6 +3,7 @@ import { Dice5, Plus, Trash2, Minus, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePersistedState, uid, pushLog } from "@/lib/storia/storage";
 import { STORAGE_KEYS, type DicelessResource, type LogEntry } from "@/lib/storia/types";
+import DiceRenderer from "./DiceRenderer";
 
 type Mode = "dice" | "table" | "diceless";
 
@@ -218,10 +219,12 @@ function DiceMode({ onSaved }: Props) {
   const [result, setResult] = useState<{ total: number; rolls: number[]; mod: number; type: string; qty: number } | null>(null);
   const [rolling, setRolling] = useState(false);
   const [log, setLog] = usePersistedState<LogEntry[]>(STORAGE_KEYS.diceLog, () => [], onSaved);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
 
   const isCustom = !QUICK_TYPES.includes(type);
   const activeType = isCustom ? `D${customN}` : type;
+
+  const pendingRef = useRef<{ total: number; rolls: number[]; mod: number; type: string; qty: number } | null>(null);
 
   const roll = () => {
     if (rolling) return;
@@ -231,18 +234,19 @@ function DiceMode({ onSaved }: Props) {
 
     playDiceSound();
     setResult(null);
+    pendingRef.current = { total, rolls, mod, type: activeType, qty };
     setRolling(true);
-
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => {
-      setRolling(false);
-      setResult({ total, rolls, mod, type: activeType, qty });
-      const text = `${qty}${activeType}${mod ? (mod > 0 ? `+${mod}` : mod) : ""} → ${total} [${rolls.join(", ")}]${mod ? ` ${mod > 0 ? "+" : ""}${mod}` : ""}`;
-      setLog(pushLog(log, { id: uid(), ts: Date.now(), text }));
-    }, 1200);
   };
 
-  const faceResult = result ? String(result.rolls[0]) : "";
+  const handleRollComplete = () => {
+    const pending = pendingRef.current;
+    if (!pending) return;
+    setRolling(false);
+    setResult(pending);
+    const text = `${pending.qty}${pending.type}${pending.mod ? (pending.mod > 0 ? `+${pending.mod}` : pending.mod) : ""} → ${pending.total} [${pending.rolls.join(", ")}]${pending.mod ? ` ${pending.mod > 0 ? "+" : ""}${pending.mod}` : ""}`;
+    setLog(pushLog(log, { id: uid(), ts: Date.now(), text }));
+    pendingRef.current = null;
+  };
 
   return (
     <div className="grid md:grid-cols-[1fr_320px] gap-6">
@@ -296,8 +300,8 @@ function DiceMode({ onSaved }: Props) {
             <Dice5 size={16} />{rolling ? "Rolando..." : `Rolar ${qty}${activeType}`}
           </Button>
 
-          <div className="mt-8 min-h-[140px] flex items-center justify-center">
-            {(rolling || result) && <DiceVisual rolling={rolling} type={activeType} result={faceResult} />}
+          <div className="mt-8 min-h-[180px] flex items-center justify-center">
+            <DiceRenderer sides={sidesOf(activeType)} isRolling={rolling} onRollComplete={handleRollComplete} size={160} />
           </div>
 
           {!rolling && result && (
