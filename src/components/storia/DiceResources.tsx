@@ -224,6 +224,8 @@ function DiceMode({ onSaved }: Props) {
   const isCustom = !QUICK_TYPES.includes(type);
   const activeType = isCustom ? `D${customN}` : type;
 
+  const pendingRef = useRef<{ total: number; rolls: number[]; mod: number; type: string; qty: number } | null>(null);
+
   const roll = () => {
     if (rolling) return;
     const sides = sidesOf(activeType);
@@ -232,18 +234,19 @@ function DiceMode({ onSaved }: Props) {
 
     playDiceSound();
     setResult(null);
+    pendingRef.current = { total, rolls, mod, type: activeType, qty };
     setRolling(true);
-
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => {
-      setRolling(false);
-      setResult({ total, rolls, mod, type: activeType, qty });
-      const text = `${qty}${activeType}${mod ? (mod > 0 ? `+${mod}` : mod) : ""} → ${total} [${rolls.join(", ")}]${mod ? ` ${mod > 0 ? "+" : ""}${mod}` : ""}`;
-      setLog(pushLog(log, { id: uid(), ts: Date.now(), text }));
-    }, 1200);
   };
 
-  const faceResult = result ? String(result.rolls[0]) : "";
+  const handleRollComplete = () => {
+    const pending = pendingRef.current;
+    if (!pending) return;
+    setRolling(false);
+    setResult(pending);
+    const text = `${pending.qty}${pending.type}${pending.mod ? (pending.mod > 0 ? `+${pending.mod}` : pending.mod) : ""} → ${pending.total} [${pending.rolls.join(", ")}]${pending.mod ? ` ${pending.mod > 0 ? "+" : ""}${pending.mod}` : ""}`;
+    setLog(pushLog(log, { id: uid(), ts: Date.now(), text }));
+    pendingRef.current = null;
+  };
 
   return (
     <div className="grid md:grid-cols-[1fr_320px] gap-6">
