@@ -22,15 +22,15 @@ const DEFAULT_LISTS: SpinnerList[] = [
   { id: uid(), name: "Tom de cena", options: ["Épico", "Sombrio", "Tenso", "Melancólico", "Esperançoso", "Brutal"] },
 ];
 
-const CANVAS_SIZE = 320;
+const CANVAS_SIZE = 400;
 const CENTER = CANVAS_SIZE / 2;
-const RADIUS = 148;
+const RADIUS = 188;
+const IDLE_SPEED = 0.003;
 
 function pickColor(index: number, total: number): string {
   let idx = index % COLORS.length;
   if (index > 0 && idx === (index - 1) % COLORS.length) idx = (idx + 1) % COLORS.length;
-  // ensure last slice doesn't match first
-  if (index === total - 1 && idx === 0 % COLORS.length) idx = (idx + 1) % COLORS.length;
+  if (index === total - 1 && idx === 0) idx = (idx + 1) % COLORS.length;
   return COLORS[idx];
 }
 
@@ -41,23 +41,23 @@ function drawSliceLabel(
   sliceAngle: number,
 ) {
   const midAngle = startAngle + sliceAngle / 2;
-  const textRadius = RADIUS * 0.62;
+  const textRadius = RADIUS * 0.58;
   const display = text.length > 16 ? text.slice(0, 15) + "…" : text;
 
   ctx.save();
   ctx.translate(CENTER, CENTER);
 
   const normalized = ((midAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-  const isBottomHalf = normalized > Math.PI / 2 && normalized < Math.PI * 1.5;
+  const isLeftHalf = normalized > Math.PI / 2 && normalized < Math.PI * 1.5;
 
   ctx.font = "italic 13px Georgia, serif";
-  ctx.fillStyle = "rgba(255,255,255,0.92)";
+  ctx.fillStyle = "rgba(255,255,255,0.95)";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.shadowColor = "rgba(0,0,0,0.5)";
+  ctx.shadowColor = "rgba(0,0,0,0.6)";
   ctx.shadowBlur = 3;
 
-  if (isBottomHalf) {
+  if (isLeftHalf) {
     ctx.rotate(midAngle + Math.PI);
     ctx.fillText(display, -textRadius, 0);
   } else {
@@ -68,7 +68,7 @@ function drawSliceLabel(
   ctx.restore();
 }
 
-function drawWheel(ctx: CanvasRenderingContext2D, options: string[], angleDeg: number) {
+function drawWheel(ctx: CanvasRenderingContext2D, options: string[], rotation: number) {
   ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
 
   if (options.length === 0) {
@@ -79,11 +79,10 @@ function drawWheel(ctx: CanvasRenderingContext2D, options: string[], angleDeg: n
     return;
   }
 
-  const rotation = (angleDeg * Math.PI) / 180;
   const slice = (Math.PI * 2) / options.length;
 
   options.forEach((opt, i) => {
-    const a0 = -Math.PI / 2 + i * slice + rotation;
+    const a0 = i * slice + rotation;
     const a1 = a0 + slice;
     ctx.beginPath();
     ctx.moveTo(CENTER, CENTER);
@@ -97,14 +96,63 @@ function drawWheel(ctx: CanvasRenderingContext2D, options: string[], angleDeg: n
     drawSliceLabel(ctx, opt, a0, slice);
   });
 
+  // outer amber ring
+  ctx.save();
+  ctx.shadowColor = "rgba(196,132,58,0.3)";
+  ctx.shadowBlur = 12;
+  ctx.beginPath();
+  ctx.arc(CENTER, CENTER, RADIUS + 2, 0, Math.PI * 2);
+  ctx.strokeStyle = "#c4843a";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  ctx.restore();
+
   // hub
   ctx.beginPath();
-  ctx.arc(CENTER, CENTER, 18, 0, Math.PI * 2);
+  ctx.arc(CENTER, CENTER, 22, 0, Math.PI * 2);
   ctx.fillStyle = "#c4843a";
   ctx.fill();
   ctx.strokeStyle = "#0a0f1a";
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 2.5;
   ctx.stroke();
+}
+
+function getResultIndex(angle: number, count: number): number {
+  const sliceAngle = (Math.PI * 2) / count;
+  const normalized = ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+  return Math.floor(((Math.PI * 2 - normalized) % (Math.PI * 2)) / sliceAngle) % count;
+}
+
+function playTick() {
+  try {
+    const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const ctx = new AC();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.value = 800;
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+    osc.start(); osc.stop(ctx.currentTime + 0.05);
+    setTimeout(() => ctx.close(), 100);
+  } catch { /* ignore */ }
+}
+
+function playDing() {
+  try {
+    const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const ctx = new AC();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.value = 1200;
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+    osc.start(); osc.stop(ctx.currentTime + 0.65);
+    setTimeout(() => ctx.close(), 700);
+  } catch { /* ignore */ }
 }
 
 export default function Spinner({ onSaved }: Props) {
@@ -112,29 +160,74 @@ export default function Spinner({ onSaved }: Props) {
   const [log, setLog] = usePersistedState<LogEntry[]>(STORAGE_KEYS.spinnerLog, () => [], onSaved);
   const [options, setOptions] = useState<string[]>(DEFAULT_OPTIONS);
   const [input, setInput] = useState("");
-  const [angle, setAngle] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [listName, setListName] = useState("");
   const [selectedListId, setSelectedListId] = useState<string>("");
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafRef = useRef<number | null>(null);
+  const angleRef = useRef(0);
+  const velocityRef = useRef(0);
+  const spinningRef = useRef(false);
+  const optionsRef = useRef(options);
+  const lastIndexRef = useRef<number>(-1);
+  const logRef = useRef(log);
 
-  useEffect(() => () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); }, []);
+  useEffect(() => { optionsRef.current = options; }, [options]);
+  useEffect(() => { logRef.current = log; }, [log]);
 
+  // setup canvas dpr and start animation loop
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     const dpr = window.devicePixelRatio || 1;
-    if (canvas.width !== CANVAS_SIZE * dpr) {
-      canvas.width = CANVAS_SIZE * dpr;
-      canvas.height = CANVAS_SIZE * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-    drawWheel(ctx, options, angle);
-  }, [options, angle]);
+    canvas.width = CANVAS_SIZE * dpr;
+    canvas.height = CANVAS_SIZE * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const animate = () => {
+      const opts = optionsRef.current;
+
+      if (spinningRef.current) {
+        velocityRef.current *= 0.985;
+        angleRef.current += velocityRef.current;
+
+        if (opts.length > 0) {
+          const idx = getResultIndex(angleRef.current, opts.length);
+          if (idx !== lastIndexRef.current) {
+            lastIndexRef.current = idx;
+            playTick();
+          }
+        }
+
+        if (velocityRef.current < 0.002) {
+          spinningRef.current = false;
+          setSpinning(false);
+          if (opts.length > 0) {
+            const idx = getResultIndex(angleRef.current, opts.length);
+            const r = opts[idx];
+            setResult(r);
+            setLog(pushLog(logRef.current, { id: uid(), ts: Date.now(), text: r }));
+            playDing();
+          }
+        }
+      } else {
+        angleRef.current += IDLE_SPEED;
+      }
+
+      drawWheel(ctx, opts, angleRef.current);
+      rafRef.current = requestAnimationFrame(animate);
+    };
+
+    rafRef.current = requestAnimationFrame(animate);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const addOption = () => {
     if (!input.trim() || options.length >= 12) return;
@@ -143,30 +236,12 @@ export default function Spinner({ onSaved }: Props) {
   };
 
   const spin = () => {
-    if (spinning || options.length < 2) return;
-    setSpinning(true); setResult(null);
-    const turns = 5 + Math.random() * 3;
-    const finalAngle = angle + turns * 360 + Math.random() * 360;
-    const duration = 4000;
-    const start = performance.now();
-    const startAngle = angle;
-    const step = (now: number) => {
-      const t = Math.min(1, (now - start) / duration);
-      const eased = 1 - Math.pow(1 - t, 3);
-      const cur = startAngle + (finalAngle - startAngle) * eased;
-      setAngle(cur);
-      if (t < 1) rafRef.current = requestAnimationFrame(step);
-      else {
-        const slice = 360 / options.length;
-        const normalized = ((cur % 360) + 360) % 360;
-        const idx = Math.floor(((360 - normalized) % 360) / slice);
-        const r = options[idx % options.length];
-        setResult(r);
-        setSpinning(false);
-        setLog(pushLog(log, { id: uid(), ts: Date.now(), text: r }));
-      }
-    };
-    rafRef.current = requestAnimationFrame(step);
+    if (spinningRef.current || options.length < 2) return;
+    setResult(null);
+    lastIndexRef.current = -1;
+    velocityRef.current = 0.35 + Math.random() * 0.2;
+    spinningRef.current = true;
+    setSpinning(true);
   };
 
   const saveList = () => {
@@ -191,20 +266,29 @@ export default function Spinner({ onSaved }: Props) {
     <div className="grid md:grid-cols-[45%_55%] gap-6">
       {/* LEFT: wheel */}
       <div className="grimoire-card p-6 flex flex-col items-center">
-        <div className="relative" style={{ width: CANVAS_SIZE }}>
-          <div
-            className="absolute left-1/2 -translate-x-1/2 z-10"
-            style={{
-              top: -4,
-              width: 0, height: 0,
-              borderLeft: "8px solid transparent",
-              borderRight: "8px solid transparent",
-              borderTop: "20px solid #c4843a",
-            }}
-          />
+        <div
+          className="relative w-full"
+          style={{ maxWidth: 320, aspectRatio: "1 / 1" }}
+        >
           <canvas
             ref={canvasRef}
-            style={{ width: CANVAS_SIZE, height: CANVAS_SIZE, display: "block" }}
+            style={{ width: "100%", height: "100%", display: "block" }}
+          />
+          {/* Side arrow pointing left (into wheel) */}
+          <div
+            style={{
+              position: "absolute",
+              right: -18,
+              top: "50%",
+              transform: "translateY(-50%)",
+              width: 0,
+              height: 0,
+              borderTop: "12px solid transparent",
+              borderBottom: "12px solid transparent",
+              borderRight: "22px solid #c4843a",
+              filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.5))",
+              zIndex: 10,
+            }}
           />
         </div>
 
@@ -216,11 +300,11 @@ export default function Spinner({ onSaved }: Props) {
             fontFamily: "Georgia, serif",
             fontWeight: 700,
             fontSize: 22,
-            color: "#c4843a",
+            color: result && !spinning ? "#c4843a" : "#475569",
             animation: result && !spinning ? "fadeInResult 0.3s ease-out" : undefined,
           }}
         >
-          {result && !spinning ? result : ""}
+          {result && !spinning ? result : "—"}
         </div>
 
         <button
