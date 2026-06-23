@@ -116,11 +116,13 @@
 }
 
 /* ===== 3D Dice ===== */
-.dice-stage {
-  perspective: 600px;
-  width: 80px;
-  height: 80px;
-  margin: 0 auto;
+.dice-container {
+  perspective: 400px;
+  perspective-origin: 50% 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 140px;
 }
 .dice-cube {
   position: relative;
@@ -131,26 +133,60 @@
 }
 .dice-face {
   position: absolute;
-  inset: 0;
+  width: 80px;
+  height: 80px;
+  border: 1.5px solid var(--amber-accent);
+  background: #1e293b;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #1e293b;
-  border: 1px solid var(--amber-accent);
-  color: var(--amber-accent);
+  backface-visibility: visible;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 0 12px rgba(0, 0, 0, 0.5);
+}
+.dice-face-content {
+  transform: rotateZ(180deg);
+}
+.face-front  { transform: rotateY(0deg)    translateZ(40px); }
+.face-back   { transform: rotateY(180deg)  translateZ(40px); }
+.face-left   { transform: rotateY(-90deg)  translateZ(40px); }
+.face-right  { transform: rotateY(90deg)   translateZ(40px); }
+.face-top    { transform: rotateX(90deg)   translateZ(40px); }
+.face-bottom { transform: rotateX(-90deg)  translateZ(40px); }
+
+.result-number {
   font-family: var(--font-serif);
   font-weight: 700;
   font-size: 28px;
-  border-radius: 6px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 0 12px rgba(0, 0, 0, 0.5);
-  backface-visibility: hidden;
+  color: var(--amber-accent);
 }
-.dice-face.f1 { transform: rotateY(0deg)   translateZ(40px); }
-.dice-face.f2 { transform: rotateY(180deg) translateZ(40px); }
-.dice-face.f3 { transform: rotateY(90deg)  translateZ(40px); }
-.dice-face.f4 { transform: rotateY(-90deg) translateZ(40px); }
-.dice-face.f5 { transform: rotateX(90deg)  translateZ(40px); }
-.dice-face.f6 { transform: rotateX(-90deg) translateZ(40px); }
+.dice-type-mark {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--amber-accent);
+  opacity: 0.4;
+}
+.dice-pips {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  width: 48px;
+  height: 48px;
+  padding: 4px;
+}
+.dice-pip {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(196, 132, 58, 0.15);
+  justify-self: center;
+  align-self: center;
+}
+.dice-pip-active {
+  background: var(--amber-accent);
+  box-shadow: 0 0 6px rgba(196, 132, 58, 0.4);
+}
 
 @keyframes diceRoll {
   0%   { transform: rotateX(0deg)   rotateY(0deg)   rotateZ(0deg); }
