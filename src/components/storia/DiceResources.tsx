@@ -3,6 +3,7 @@ import { Dice5, Plus, Trash2, Minus, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePersistedState, uid, pushLog } from "@/lib/storia/storage";
 import { STORAGE_KEYS, type DicelessResource, type LogEntry } from "@/lib/storia/types";
+import DiceRenderer from "./DiceRenderer";
 
 type Mode = "dice" | "table" | "diceless";
 
