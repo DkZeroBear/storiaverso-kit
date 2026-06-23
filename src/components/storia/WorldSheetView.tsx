@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Plus, Trash2, Download, Upload, Sparkles, ChevronDown } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Plus, Trash2, Download, Upload, Sparkles, ChevronDown, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { uid } from "@/lib/storia/storage";
 import { generateExpansion } from "@/lib/ai-expansion.functions";
@@ -143,6 +143,17 @@ export default function WorldSheetView({ sheet, setSheet }: Props) {
   const [aiOut, setAiOut] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
+  const [aiKey, setAiKey] = useState("");
+  const [showKey, setShowKey] = useState(false);
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem("storiaverso:anthropic_api_key");
+    if (stored) setAiKey(stored);
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem("storiaverso:anthropic_api_key", aiKey);
+  }, [aiKey]);
 
 
   const [mobileTab, setMobileTab] = useState<"form" | "preview">("form");
@@ -207,7 +218,7 @@ export default function WorldSheetView({ sheet, setSheet }: Props) {
   const generateAI = async () => {
     setAiError(""); setAiLoading(true); setAiOut("");
     try {
-      const { text } = await generateExpansion({ data: { preview } });
+      const { text } = await generateExpansion({ data: { preview, anthropicApiKey: aiKey || undefined } });
       setAiOut(text);
     } catch (e) {
       setAiError(e instanceof Error ? e.message : String(e));
@@ -544,13 +555,35 @@ export default function WorldSheetView({ sheet, setSheet }: Props) {
           {/* AI */}
           <section className="grimoire-card p-5">
             <h3 className="font-serif text-xl text-[color:var(--amber-accent)] mb-3">Expansão com IA</h3>
+            <div className="space-y-3 mb-4">
+              <label className="block space-y-1.5">
+                <span className="text-xs uppercase tracking-wider text-[color:var(--muted-foreground)]">Chave da Anthropic (opcional — deixe em branco para usar Lovable AI)</span>
+                <div className="relative">
+                  <input
+                    type={showKey ? "text" : "password"}
+                    className="field-input w-full pr-10"
+                    value={aiKey}
+                    onChange={(e) => setAiKey(e.target.value)}
+                    placeholder="sk-ant-api03-..."
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowKey(!showKey)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)]"
+                    aria-label={showKey ? "Ocultar chave" : "Mostrar chave"}
+                  >
+                    {showKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </label>
+            </div>
             <div className="flex gap-2">
               <Button onClick={generateAI} disabled={aiLoading}>
-                <Sparkles size={14} />{aiLoading ? "Gerando..." : "✦ Gerar expansão"}
+                <Sparkles size={14} />{aiLoading ? "Gerando..." : aiKey ? "✦ Gerar com Anthropic" : "✦ Gerar expansão"}
               </Button>
               {aiOut && <Button variant="outline" onClick={exportAI}><Download size={14} />Baixar TXT</Button>}
             </div>
-            {aiError && <p className="text-sm text-[color:var(--destructive)] mt-3">Erro ao conectar com a IA. Verifique sua conexão.</p>}
+            {aiError && <p className="text-sm text-[color:var(--destructive)] mt-3">{aiError}</p>}
             {aiOut && (
               <pre className="whitespace-pre-wrap text-sm mt-4 p-4 bg-[color:var(--muted)] rounded-md font-sans leading-relaxed">{aiOut}</pre>
             )}
