@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Dice5, Plus, Trash2, Minus, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePersistedState, uid, pushLog } from "@/lib/storia/storage";
@@ -211,6 +211,73 @@ function sidesOf(type: string): number {
   return Number.isFinite(n) && n >= 2 ? n : 6;
 }
 
+const CONVENTIONAL_DICE = [2, 4, 6, 8, 10, 12, 20, 100];
+function isConventional(sides: number): boolean {
+  return CONVENTIONAL_DICE.includes(sides);
+}
+
+function UnknownDice({
+  sides,
+  isRolling,
+  result,
+  showResult,
+  onRollComplete,
+}: {
+  sides: number;
+  isRolling: boolean;
+  result: number | null;
+  showResult: boolean;
+  onRollComplete: () => void;
+}) {
+  const completedRef = useRef(false);
+  useEffect(() => {
+    if (!isRolling) {
+      completedRef.current = false;
+      return;
+    }
+    completedRef.current = false;
+    const t = setTimeout(() => {
+      if (!completedRef.current) {
+        completedRef.current = true;
+        onRollComplete();
+      }
+    }, 1400);
+    return () => clearTimeout(t);
+  }, [isRolling, onRollComplete]);
+
+  return (
+    <div className="unknown-dice" style={{ width: 160, height: 160 }}>
+      <svg viewBox="0 0 160 160" width="160" height="160" className="absolute inset-0">
+        <polygon
+          points="80,12 138,46 138,114 80,148 22,114 22,46"
+          fill="#1e293b"
+          stroke="#c4843a"
+          strokeWidth="1.5"
+          strokeDasharray="5 4"
+        />
+        <polygon
+          points="80,32 122,56 122,104 80,128 38,104 38,56"
+          fill="none"
+          stroke="#c4843a"
+          strokeWidth="0.5"
+          opacity="0.25"
+        />
+        <text x="80" y="26" textAnchor="middle" fill="#c4843a" fontSize="10" opacity="0.7" fontFamily="serif">
+          D{sides}
+        </text>
+      </svg>
+      <div className="unknown-dice-center">
+        {!showResult ? (
+          <span className={isRolling ? "unknown-q-spin" : "unknown-q-pulse"}>?</span>
+        ) : (
+          <span className="unknown-result">{result}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
 function DiceMode({ onSaved }: Props) {
   const [type, setType] = useState("D6");
   const [customN, setCustomN] = useState<number>(7);
@@ -300,18 +367,33 @@ function DiceMode({ onSaved }: Props) {
             <Dice5 size={16} />{rolling ? "Rolando..." : `Rolar ${qty}${activeType}`}
           </Button>
 
-          <div className="mt-8 min-h-[180px] flex items-center justify-center">
-            <DiceRenderer sides={sidesOf(activeType)} isRolling={rolling} onRollComplete={handleRollComplete} size={160} />
+          <div className="mt-8 min-h-[180px] flex items-center justify-center relative">
+            {isConventional(sidesOf(activeType)) ? (
+              <DiceRenderer sides={sidesOf(activeType)} isRolling={rolling} onRollComplete={handleRollComplete} size={160} />
+            ) : (
+              <UnknownDice
+                sides={sidesOf(activeType)}
+                isRolling={rolling}
+                showResult={!rolling && !!result}
+                result={result?.total ?? null}
+                onRollComplete={handleRollComplete}
+              />
+            )}
+            {!rolling && result && isConventional(sidesOf(activeType)) && (
+              <div className="dice-result-overlay">
+                <span className="dice-result-overlay-number">{result.total}</span>
+              </div>
+            )}
           </div>
 
           {!rolling && result && (
             <div className="mt-4 text-center dice-result-in">
-              <div className="font-serif text-[64px] leading-none text-[color:var(--amber-accent)]">{result.total}</div>
-              <div className="mt-3 text-sm text-[color:var(--muted-foreground)]">
+              <div className="mt-1 text-sm text-[color:var(--muted-foreground)]">
                 {result.qty}{result.type}{result.mod ? (result.mod > 0 ? `+${result.mod}` : result.mod) : ""} → [{result.rolls.join(", ")}]{result.mod ? ` ${result.mod > 0 ? "+" : ""}${result.mod}` : ""}
               </div>
             </div>
           )}
+
         </div>
       </div>
       <DiceLog log={log} onClear={() => setLog([])} />
