@@ -141,10 +141,7 @@ export default function WorldSheetView({ sheet, setSheet }: Props) {
   const [aiOut, setAiOut] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
-  const [apiKey, setApiKey] = useState<string>(() =>
-    typeof window === "undefined" ? "" : window.localStorage.getItem("storiaverso:anthropic_key") ?? ""
-  );
-  const [showKey, setShowKey] = useState(false);
+
 
   const [mobileTab, setMobileTab] = useState<"form" | "preview">("form");
 
