@@ -217,7 +217,7 @@ export default function Spinner({ onSaved }: Props) {
             fontWeight: 700,
             fontSize: 22,
             color: "#c4843a",
-            animation: result && !spinning ? "fadeIn 0.3s ease-out" : undefined,
+            animation: result && !spinning ? "fadeInResult 0.3s ease-out" : undefined,
           }}
         >
           {result && !spinning ? result : ""}
