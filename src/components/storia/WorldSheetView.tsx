@@ -2,7 +2,9 @@ import { useMemo, useState } from "react";
 import { Plus, Trash2, Download, Upload, Sparkles, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { uid } from "@/lib/storia/storage";
+import { generateExpansion } from "@/lib/ai-expansion.functions";
 import type { WorldSheet, People, Kingdom, HistEvent, Threat, Creature, RpgResource } from "@/lib/storia/types";
+
 
 type Setter = (next: WorldSheet) => void;
 
