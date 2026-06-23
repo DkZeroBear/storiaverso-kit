@@ -589,34 +589,19 @@ ${preview}`;
 
           {/* AI */}
           <section className="grimoire-card p-5">
-            <h3 className="font-serif text-xl text-[color:var(--amber-accent)] mb-2">Expansão com IA</h3>
-            <p className="text-xs text-[color:var(--muted-foreground)] mb-3">
-              Requer chave da Anthropic (claude-sonnet-4-5). A chave é salva apenas no seu navegador.
-            </p>
-            <div className="flex gap-2 items-end mb-3">
-              <label className="flex-1">
-                <span className="text-xs uppercase tracking-wider text-[color:var(--muted-foreground)]">Anthropic API Key</span>
-                <input
-                  type={showKey ? "text" : "password"}
-                  className="field-input"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="sk-ant-..."
-                />
-              </label>
-              <Button size="sm" variant="outline" onClick={() => setShowKey(!showKey)}>{showKey ? "Ocultar" : "Mostrar"}</Button>
-            </div>
+            <h3 className="font-serif text-xl text-[color:var(--amber-accent)] mb-3">Expansão com IA</h3>
             <div className="flex gap-2">
               <Button onClick={generateAI} disabled={aiLoading}>
-                <Sparkles size={14} />{aiLoading ? "Gerando..." : "Gerar expansão"}
+                <Sparkles size={14} />{aiLoading ? "Gerando..." : "✦ Gerar expansão"}
               </Button>
               {aiOut && <Button variant="outline" onClick={exportAI}><Download size={14} />Baixar TXT</Button>}
             </div>
-            {aiError && <p className="text-sm text-[color:var(--destructive)] mt-3">{aiError}</p>}
+            {aiError && <p className="text-sm text-[color:var(--destructive)] mt-3">Erro ao conectar com a IA. Verifique sua conexão.</p>}
             {aiOut && (
               <pre className="whitespace-pre-wrap text-sm mt-4 p-4 bg-[color:var(--muted)] rounded-md font-sans leading-relaxed">{aiOut}</pre>
             )}
           </section>
+
         </div>
 
         {/* PREVIEW */}
