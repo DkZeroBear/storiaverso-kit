@@ -205,8 +205,8 @@ export default function WorldSheetView({ sheet, setSheet }: Props) {
   const generateAI = async () => {
     setAiError(""); setAiLoading(true); setAiOut("");
     try {
-      if (!apiKey) throw new Error("Insira sua chave da Anthropic para gerar.");
-      window.localStorage.setItem("storiaverso:anthropic_key", apiKey);
+      // ATENÇÃO: uso local apenas — nunca commitar em repositório público
+      const ANTHROPIC_API_KEY = "SUA_CHAVE_AQUI";
       const prompt = `Você é um assistente do framework STORIAverso de worldbuilding e RPG.
 Com base nos dados do mundo abaixo, gere uma expansão narrativa com exatamente estas seções:
 
@@ -238,7 +238,7 @@ ${preview}`;
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-api-key": apiKey,
+          "x-api-key": ANTHROPIC_API_KEY,
           "anthropic-version": "2023-06-01",
           "anthropic-dangerous-direct-browser-access": "true",
         },
@@ -248,6 +248,7 @@ ${preview}`;
           messages: [{ role: "user", content: prompt }],
         }),
       });
+
       if (!res.ok) {
         const t = await res.text();
         throw new Error(`Erro da API (${res.status}): ${t.slice(0, 200)}`);
