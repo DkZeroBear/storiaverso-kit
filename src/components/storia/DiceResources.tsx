@@ -139,8 +139,7 @@ function DiceMode({ onSaved }: Props) {
     }, 1200);
   };
 
-  // Face label during animation: type abbreviation. After roll: first die.
-  const faceLabel = rolling ? type : (result ? String(result.rolls[0]) : type);
+  const faceResult = result ? String(result.rolls[0]) : "";
 
   return (
     <div className="grid md:grid-cols-[1fr_320px] gap-6">
@@ -167,7 +166,7 @@ function DiceMode({ onSaved }: Props) {
           </Button>
 
           <div className="mt-8 min-h-[120px] flex items-center justify-center">
-            {(rolling || result) && <Dice3D rolling={rolling} faceLabel={faceLabel} />}
+            {(rolling || result) && <Dice3D rolling={rolling} type={type} result={faceResult} />}
           </div>
 
           {!rolling && result && (
