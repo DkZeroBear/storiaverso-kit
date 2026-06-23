@@ -54,16 +54,58 @@ function playDiceSound() {
   }
 }
 
-function Dice3D({ rolling, faceLabel }: { rolling: boolean; faceLabel: string }) {
+function DicePips({ value }: { value: number }) {
+  const faces: Record<number, number[]> = {
+    1: [5],
+    2: [1, 9],
+    3: [1, 5, 9],
+    4: [1, 3, 7, 9],
+    5: [1, 3, 5, 7, 9],
+    6: [1, 3, 4, 6, 7, 9],
+  };
+  const active = new Set(faces[value] || []);
   return (
-    <div className="dice-stage">
+    <div className="dice-pips">
+      {Array.from({ length: 9 }, (_, i) => {
+        const n = i + 1;
+        return <span key={n} className={`dice-pip ${active.has(n) ? "dice-pip-active" : ""}`} />;
+      })}
+    </div>
+  );
+}
+
+function Dice3D({ rolling, type, result }: { rolling: boolean; type: string; result: string }) {
+  const isD6 = type === "D6";
+  const typeMark = <span className="dice-type-mark">{type}</span>;
+  return (
+    <div className="dice-container">
       <div className={`dice-cube${rolling ? " dice-rolling" : ""}`}>
-        <div className="dice-face f1">{faceLabel}</div>
-        <div className="dice-face f2">{faceLabel}</div>
-        <div className="dice-face f3">{faceLabel}</div>
-        <div className="dice-face f4">{faceLabel}</div>
-        <div className="dice-face f5">{faceLabel}</div>
-        <div className="dice-face f6">{faceLabel}</div>
+        <div className="dice-face face-front">
+          <div className="dice-face-content">
+            {isD6
+              ? rolling
+                ? <DicePips value={6} />
+                : <span className="result-number">{result || type}</span>
+              : rolling
+                ? typeMark
+                : <span className="result-number">{result || type}</span>}
+          </div>
+        </div>
+        <div className="dice-face face-back">
+          <div className="dice-face-content">{isD6 ? <DicePips value={1} /> : typeMark}</div>
+        </div>
+        <div className="dice-face face-left">
+          <div className="dice-face-content">{isD6 ? <DicePips value={2} /> : typeMark}</div>
+        </div>
+        <div className="dice-face face-right">
+          <div className="dice-face-content">{isD6 ? <DicePips value={5} /> : typeMark}</div>
+        </div>
+        <div className="dice-face face-top">
+          <div className="dice-face-content">{isD6 ? <DicePips value={3} /> : typeMark}</div>
+        </div>
+        <div className="dice-face face-bottom">
+          <div className="dice-face-content">{isD6 ? <DicePips value={4} /> : typeMark}</div>
+        </div>
       </div>
     </div>
   );
