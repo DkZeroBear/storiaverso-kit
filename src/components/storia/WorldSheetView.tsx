@@ -154,15 +154,51 @@ function download(filename: string, content: string, type = "text/plain") {
 
 export default function WorldSheetView({ sheet, setSheet }: Props) {
   const set: Setter = (next) => setSheet(next);
-  const update = <K extends keyof WorldSheet>(key: K, value: WorldSheet[K]) => set({ ...sheet, [key]: value });
-  const updateMyth = (k: keyof WorldSheet["mythology"], v: string) =>
-    set({ ...sheet, mythology: { ...sheet.mythology, [k]: v } });
-  const updateGeo = (k: keyof WorldSheet["geography"], v: string) =>
-    set({ ...sheet, geography: { ...sheet.geography, [k]: v } });
-  const updateMagic = (k: keyof WorldSheet["magic"], v: string) =>
-    set({ ...sheet, magic: { ...sheet.magic, [k]: v } });
-  const updateRpg = <K extends keyof WorldSheet["rpg_system"]>(k: K, v: WorldSheet["rpg_system"][K]) =>
-    set({ ...sheet, rpg_system: { ...sheet.rpg_system, [k]: v } });
+
+  const update = useCallback(
+    <K extends keyof WorldSheet>(key: K, value: WorldSheet[K]) =>
+      setSheet((prev) => ({ ...prev, [key]: value })),
+    [setSheet]
+  );
+
+  const updateMyth = useCallback(
+    (k: keyof WorldSheet["mythology"], v: string) =>
+      setSheet((prev) => ({
+        ...prev,
+        mythology: { ...prev.mythology, [k]: v },
+      })),
+    [setSheet]
+  );
+
+  const updateGeo = useCallback(
+    (k: keyof WorldSheet["geography"], v: string) =>
+      setSheet((prev) => ({
+        ...prev,
+        geography: { ...prev.geography, [k]: v },
+      })),
+    [setSheet]
+  );
+
+  const updateMagic = useCallback(
+    (k: keyof WorldSheet["magic"], v: string) =>
+      setSheet((prev) => ({
+        ...prev,
+        magic: { ...prev.magic, [k]: v },
+      })),
+    [setSheet]
+  );
+
+  const updateRpg = useCallback(
+    <K extends keyof WorldSheet["rpg_system"]>(
+      k: K,
+      v: WorldSheet["rpg_system"][K]
+    ) =>
+      setSheet((prev) => ({
+        ...prev,
+        rpg_system: { ...prev.rpg_system, [k]: v },
+      })),
+    [setSheet]
+  );
 
   const [aiOut, setAiOut] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -175,59 +211,223 @@ export default function WorldSheetView({ sheet, setSheet }: Props) {
   const preview = useMemo(() => formatSheet(sheet), [sheet]);
 
   // List helpers
-  const addPeople = () => update("peoples", [...sheet.peoples, {
-    id: uid(), name: "", race: "", trait: "", habitat: "", magic: "", habit: "",
-    origin_belief: "", internal_conflict: "", relations: "", unanswered: "",
-  } satisfies People]);
-  const setPeople = (id: string, patch: Partial<People>) =>
-    update("peoples", sheet.peoples.map((p) => p.id === id ? { ...p, ...patch } : p));
-  const rmPeople = (id: string) => update("peoples", sheet.peoples.filter((p) => p.id !== id));
+  const addPeople = useCallback(
+    () =>
+      setSheet((prev) => ({
+        ...prev,
+        peoples: [
+          ...prev.peoples,
+          {
+            id: uid(), name: "", race: "", trait: "", habitat: "", magic: "", habit: "",
+            origin_belief: "", internal_conflict: "", relations: "", unanswered: "",
+          } satisfies People,
+        ],
+      })),
+    [setSheet]
+  );
 
-  const addKingdom = () => update("kingdoms", [...sheet.kingdoms, {
-    id: uid(), name: "", power: "", resource: "", relations: "", secret: "",
-  } satisfies Kingdom]);
-  const setKingdom = (id: string, patch: Partial<Kingdom>) =>
-    update("kingdoms", sheet.kingdoms.map((k) => k.id === id ? { ...k, ...patch } : k));
-  const rmKingdom = (id: string) => update("kingdoms", sheet.kingdoms.filter((k) => k.id !== id));
+  const setPeople = useCallback(
+    (id: string, patch: Partial<People>) =>
+      setSheet((prev) => ({
+        ...prev,
+        peoples: prev.peoples.map((p) =>
+          p.id === id ? { ...p, ...patch } : p
+        ),
+      })),
+    [setSheet]
+  );
 
-  const addEvent = () => update("events", [...sheet.events, {
-    id: uid(), what: "", who: "", affects: "", official_vs_real: "", unresolved: "",
-  } satisfies HistEvent]);
-  const setEvent = (id: string, patch: Partial<HistEvent>) =>
-    update("events", sheet.events.map((e) => e.id === id ? { ...e, ...patch } : e));
-  const rmEvent = (id: string) => update("events", sheet.events.filter((e) => e.id !== id));
+  const rmPeople = useCallback(
+    (id: string) =>
+      setSheet((prev) => ({
+        ...prev,
+        peoples: prev.peoples.filter((p) => p.id !== id),
+      })),
+    [setSheet]
+  );
 
-  const addThreat = () => update("threats", [...sheet.threats, {
-    id: uid(), what: "", who_knows: "", if_ignored: "", who_wants: "", magic_link: "",
-  } satisfies Threat]);
-  const setThreat = (id: string, patch: Partial<Threat>) =>
-    update("threats", sheet.threats.map((t) => t.id === id ? { ...t, ...patch } : t));
-  const rmThreat = (id: string) => update("threats", sheet.threats.filter((t) => t.id !== id));
+  const addKingdom = useCallback(
+    () =>
+      setSheet((prev) => ({
+        ...prev,
+        kingdoms: [
+          ...prev.kingdoms,
+          {
+            id: uid(), name: "", power: "", resource: "", relations: "", secret: "",
+          } satisfies Kingdom,
+        ],
+      })),
+    [setSheet]
+  );
 
-  const addCreature = () => update("bestiary", [...sheet.bestiary, {
-    id: uid(), name: "", type: "Ameaça", habitat: "", behavior: "",
-    people_relation: "", magic_relation: "", economic: "", narrative: "", legend: "",
-  } satisfies Creature]);
-  const setCreature = (id: string, patch: Partial<Creature>) =>
-    update("bestiary", sheet.bestiary.map((c) => c.id === id ? { ...c, ...patch } : c));
-  const rmCreature = (id: string) => update("bestiary", sheet.bestiary.filter((c) => c.id !== id));
+  const setKingdom = useCallback(
+    (id: string, patch: Partial<Kingdom>) =>
+      setSheet((prev) => ({
+        ...prev,
+        kingdoms: prev.kingdoms.map((k) =>
+          k.id === id ? { ...k, ...patch } : k
+        ),
+      })),
+    [setSheet]
+  );
 
-  const toggleCheckpoint = (key: string) => {
-    const items = { ...sheet.checkpoint.items, [key]: !sheet.checkpoint.items[key] };
-    update("checkpoint", { ...sheet.checkpoint, items });
-  };
+  const rmKingdom = useCallback(
+    (id: string) =>
+      setSheet((prev) => ({
+        ...prev,
+        kingdoms: prev.kingdoms.filter((k) => k.id !== id),
+      })),
+    [setSheet]
+  );
 
-  const toggleRisk = (r: string) => {
-    const risks = sheet.rpg_system.risks.includes(r)
-      ? sheet.rpg_system.risks.filter((x) => x !== r)
-      : [...sheet.rpg_system.risks, r];
-    updateRpg("risks", risks);
-  };
+  const addEvent = useCallback(
+    () =>
+      setSheet((prev) => ({
+        ...prev,
+        events: [
+          ...prev.events,
+          {
+            id: uid(), what: "", who: "", affects: "", official_vs_real: "", unresolved: "",
+          } satisfies HistEvent,
+        ],
+      })),
+    [setSheet]
+  );
 
-  const setVerb = (i: number, patch: Partial<WorldSheet["rpg_system"]["verbs"][number]>) => {
-    const verbs = sheet.rpg_system.verbs.map((v, idx) => idx === i ? { ...v, ...patch } : v);
-    updateRpg("verbs", verbs);
-  };
+  const setEvent = useCallback(
+    (id: string, patch: Partial<HistEvent>) =>
+      setSheet((prev) => ({
+        ...prev,
+        events: prev.events.map((e) =>
+          e.id === id ? { ...e, ...patch } : e
+        ),
+      })),
+    [setSheet]
+  );
+
+  const rmEvent = useCallback(
+    (id: string) =>
+      setSheet((prev) => ({
+        ...prev,
+        events: prev.events.filter((e) => e.id !== id),
+      })),
+    [setSheet]
+  );
+
+  const addThreat = useCallback(
+    () =>
+      setSheet((prev) => ({
+        ...prev,
+        threats: [
+          ...prev.threats,
+          {
+            id: uid(), what: "", who_knows: "", if_ignored: "", who_wants: "", magic_link: "",
+          } satisfies Threat,
+        ],
+      })),
+    [setSheet]
+  );
+
+  const setThreat = useCallback(
+    (id: string, patch: Partial<Threat>) =>
+      setSheet((prev) => ({
+        ...prev,
+        threats: prev.threats.map((t) =>
+          t.id === id ? { ...t, ...patch } : t
+        ),
+      })),
+    [setSheet]
+  );
+
+  const rmThreat = useCallback(
+    (id: string) =>
+      setSheet((prev) => ({
+        ...prev,
+        threats: prev.threats.filter((t) => t.id !== id),
+      })),
+    [setSheet]
+  );
+
+  const addCreature = useCallback(
+    () =>
+      setSheet((prev) => ({
+        ...prev,
+        bestiary: [
+          ...prev.bestiary,
+          {
+            id: uid(), name: "", type: "Ameaça", habitat: "", behavior: "",
+            people_relation: "", magic_relation: "", economic: "", narrative: "", legend: "",
+          } satisfies Creature,
+        ],
+      })),
+    [setSheet]
+  );
+
+  const setCreature = useCallback(
+    (id: string, patch: Partial<Creature>) =>
+      setSheet((prev) => ({
+        ...prev,
+        bestiary: prev.bestiary.map((c) =>
+          c.id === id ? { ...c, ...patch } : c
+        ),
+      })),
+    [setSheet]
+  );
+
+  const rmCreature = useCallback(
+    (id: string) =>
+      setSheet((prev) => ({
+        ...prev,
+        bestiary: prev.bestiary.filter((c) => c.id !== id),
+      })),
+    [setSheet]
+  );
+
+  const toggleCheckpoint = useCallback(
+    (key: string) =>
+      setSheet((prev) => ({
+        ...prev,
+        checkpoint: {
+          ...prev.checkpoint,
+          items: {
+            ...prev.checkpoint.items,
+            [key]: !prev.checkpoint.items[key],
+          },
+        },
+      })),
+    [setSheet]
+  );
+
+  const toggleRisk = useCallback(
+    (r: string) =>
+      setSheet((prev) => ({
+        ...prev,
+        rpg_system: {
+          ...prev.rpg_system,
+          risks: prev.rpg_system.risks.includes(r)
+            ? prev.rpg_system.risks.filter((x) => x !== r)
+            : [...prev.rpg_system.risks, r],
+        },
+      })),
+    [setSheet]
+  );
+
+  const setVerb = useCallback(
+    (
+      i: number,
+      patch: Partial<WorldSheet["rpg_system"]["verbs"][number]>
+    ) =>
+      setSheet((prev) => ({
+        ...prev,
+        rpg_system: {
+          ...prev.rpg_system,
+          verbs: prev.rpg_system.verbs.map((v, idx) =>
+            idx === i ? { ...v, ...patch } : v
+          ),
+        },
+      })),
+    [setSheet]
+  );
 
   const generateAI = async () => {
     setAiError("");
