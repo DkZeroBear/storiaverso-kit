@@ -75,7 +75,7 @@ function geometryFor(sides: number): THREE.BufferGeometry {
   }
 }
 
-export default function DiceRenderer({ sides, isRolling, onRollComplete, size = 160 }: DiceRendererProps) {
+export default function DiceRenderer({ sides, isRolling, onRollComplete, result, showResult, size = 160 }: DiceRendererProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rollRef = useRef({
     active: false,
