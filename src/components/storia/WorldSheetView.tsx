@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Plus, Trash2, Download, Upload, Sparkles, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { uid } from "@/lib/storia/storage";
@@ -15,45 +15,67 @@ interface Props {
   setSheet: React.Dispatch<React.SetStateAction<WorldSheet>>;
 }
 
-const Field = ({
+const Field = React.memo(function Field({
   label, value, onChange, placeholder, textarea, type = "text",
-}: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; textarea?: boolean; type?: string }) => (
-  <label className="block space-y-1.5">
-    <span className="text-xs uppercase tracking-wider text-[color:var(--muted-foreground)]">{label}</span>
-    {textarea ? (
-      <textarea
-        className="field-input min-h-[72px] resize-y"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-      />
-    ) : (
-      <input
-        type={type}
-        className="field-input"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-      />
-    )}
-  </label>
-);
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  textarea?: boolean;
+  type?: string;
+}) {
+  return (
+    <label className="block space-y-1.5">
+      <span className="text-xs uppercase tracking-wider text-[color:var(--muted-foreground)]">{label}</span>
+      {textarea ? (
+        <textarea
+          className="field-input min-h-[72px] resize-y"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+        />
+      ) : (
+        <input
+          type={type}
+          className="field-input"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+        />
+      )}
+    </label>
+  );
+});
 
-const Select = ({
+const Select = React.memo(function Select({
   label, value, onChange, options,
-}: { label: string; value: string; onChange: (v: string) => void; options: string[] }) => (
-  <label className="block space-y-1.5">
-    <span className="text-xs uppercase tracking-wider text-[color:var(--muted-foreground)]">{label}</span>
-    <select className="field-input" value={value} onChange={(e) => onChange(e.target.value)}>
-      <option value="">—</option>
-      {options.map((o) => (
-        <option key={o} value={o}>{o}</option>
-      ))}
-    </select>
-  </label>
-);
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+}) {
+  return (
+    <label className="block space-y-1.5">
+      <span className="text-xs uppercase tracking-wider text-[color:var(--muted-foreground)]">{label}</span>
+      <select className="field-input" value={value} onChange={(e) => onChange(e.target.value)}>
+        <option value="">—</option>
+        {options.map((o) => (
+          <option key={o} value={o}>{o}</option>
+        ))}
+      </select>
+    </label>
+  );
+});
 
-function Accordion({ title, children, onRemove }: { title: string; children: React.ReactNode; onRemove?: () => void }) {
+const Accordion = React.memo(function Accordion({
+  title, children, onRemove,
+}: {
+  title: string;
+  children: React.ReactNode;
+  onRemove?: () => void;
+}) {
   const [open, setOpen] = useState(true);
   return (
     <div className="grimoire-card overflow-hidden">
@@ -71,7 +93,7 @@ function Accordion({ title, children, onRemove }: { title: string; children: Rea
       {open && <div className="p-4 space-y-3">{children}</div>}
     </div>
   );
-}
+});
 
 const SectionTitle = ({ children }: { children: React.ReactNode }) => (
   <h3 className="section-title">{children}</h3>
