@@ -182,5 +182,14 @@ export default function DiceRenderer({ sides, isRolling, onRollComplete, result,
     roll.vz = (Math.random() - 0.5) * 0.6;
   }, [isRolling]);
 
-  return <canvas ref={canvasRef} width={size} height={size} style={{ width: size, height: size, display: "block" }} />;
+  return (
+    <div style={{ position: "relative", width: size, height: size }}>
+      <canvas ref={canvasRef} width={size} height={size} style={{ width: size, height: size, display: "block" }} />
+      {showResult && result !== null && result !== undefined && (
+        <div className="dice-result-overlay">
+          <span className="dice-result-overlay-number">{result}</span>
+        </div>
+      )}
+    </div>
+  );
 }
