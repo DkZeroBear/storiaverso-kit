@@ -22,7 +22,7 @@ export default function MapSketch({ sheet }: Props) {
   const generate = () => {
     const c = canvasRef.current;
     if (!c) return;
-    const ctx = c.getContext("2d");
+    const ctx = c.getContext("2d", { willReadFrequently: false });
     if (!ctx) return;
     const d = desc.toLowerCase();
     // seedable rng
