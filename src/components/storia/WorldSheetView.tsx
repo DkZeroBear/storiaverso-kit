@@ -198,17 +198,7 @@ export default function WorldSheetView({ sheet, setSheet }: Props) {
   const [aiOut, setAiOut] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
-  const [aiKey, setAiKey] = useState("");
-  const [showKey, setShowKey] = useState(false);
 
-  useEffect(() => {
-    const stored = window.localStorage.getItem("storiaverso:anthropic_api_key");
-    if (stored) setAiKey(stored);
-  }, []);
-
-  useEffect(() => {
-    window.localStorage.setItem("storiaverso:anthropic_api_key", aiKey);
-  }, [aiKey]);
 
 
   const [mobileTab, setMobileTab] = useState<"form" | "preview">("form");
