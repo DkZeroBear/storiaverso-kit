@@ -5,6 +5,8 @@ interface DiceRendererProps {
   sides: number;
   isRolling: boolean;
   onRollComplete: () => void;
+  result?: number | null;
+  showResult?: boolean;
   size?: number;
 }
 
