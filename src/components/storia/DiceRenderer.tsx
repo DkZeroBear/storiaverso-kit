@@ -5,6 +5,8 @@ interface DiceRendererProps {
   sides: number;
   isRolling: boolean;
   onRollComplete: () => void;
+  result?: number | null;
+  showResult?: boolean;
   size?: number;
 }
 
@@ -73,7 +75,7 @@ function geometryFor(sides: number): THREE.BufferGeometry {
   }
 }
 
-export default function DiceRenderer({ sides, isRolling, onRollComplete, size = 160 }: DiceRendererProps) {
+export default function DiceRenderer({ sides, isRolling, onRollComplete, result, showResult, size = 160 }: DiceRendererProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rollRef = useRef({
     active: false,
@@ -180,5 +182,14 @@ export default function DiceRenderer({ sides, isRolling, onRollComplete, size = 
     roll.vz = (Math.random() - 0.5) * 0.6;
   }, [isRolling]);
 
-  return <canvas ref={canvasRef} width={size} height={size} style={{ width: size, height: size, display: "block" }} />;
+  return (
+    <div style={{ position: "relative", width: size, height: size }}>
+      <canvas ref={canvasRef} width={size} height={size} style={{ width: size, height: size, display: "block" }} />
+      {showResult && result !== null && result !== undefined && (
+        <div className="dice-result-overlay">
+          <span className="dice-result-overlay-number">{result}</span>
+        </div>
+      )}
+    </div>
+  );
 }

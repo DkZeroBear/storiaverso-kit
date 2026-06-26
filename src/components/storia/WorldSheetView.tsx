@@ -1,9 +1,64 @@
-import { useEffect, useMemo, useState } from "react";
-import { Plus, Trash2, Download, Upload, Sparkles, ChevronDown, Eye, EyeOff } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Plus, Trash2, Download, Upload, Sparkles, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { uid } from "@/lib/storia/storage";
-import { generateExpansion } from "@/lib/ai-expansion.functions";
 import type { WorldSheet, People, Kingdom, HistEvent, Threat, Creature, RpgResource } from "@/lib/storia/types";
+
+const ANTHROPIC_API_KEY = "SUA_CHAVE_AQUI";
+
+async function callAIExpansion(preview: string): Promise<string> {
+  const prompt = `Você é um assistente do framework STORIAverso de worldbuilding e RPG.
+Com base nos dados do mundo abaixo, gere uma expansão narrativa com exatamente estas seções:
+
+**Segredo oculto do mundo**
+[1 parágrafo — algo que contradiz ou aprofunda o que foi construído]
+
+**Dois locais icônicos**
+1. [nome]: [descrição em 2-3 linhas — habitat, atmosfera, função narrativa]
+2. [nome]: [descrição em 2-3 linhas]
+
+**Mito fundador**
+[1 parágrafo — uma lenda que os povos contam sobre a origem de algo]
+
+**Dois ganchos de aventura**
+1. [gancho — situação concreta que exige decisão dos personagens]
+2. [gancho]
+
+**Verbos centrais sugeridos para o sistema de RPG**
+[3 a 5 verbos com justificativa breve de por que emergem desse mundo]
+
+**Uma contradição potencial entre pilares**
+[algo que pode ser um conflito narrativo interessante — não um erro]
+
+Seja coerente com o tom e a mitologia definidos. Sem texto fora dessas seções.
+
+Dados do mundo:
+${preview}`;
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1500,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Erro da API (${response.status}): ${err.slice(0, 200)}`);
+  }
+
+  const data = await response.json();
+  const text = data?.content?.find((c: { type: string; text?: string }) => c.type === "text")?.text;
+  return text ?? "(resposta vazia)";
+}
 
 
 type Setter = (next: WorldSheet) => void;
@@ -143,17 +198,7 @@ export default function WorldSheetView({ sheet, setSheet }: Props) {
   const [aiOut, setAiOut] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
-  const [aiKey, setAiKey] = useState("");
-  const [showKey, setShowKey] = useState(false);
 
-  useEffect(() => {
-    const stored = window.localStorage.getItem("storiaverso:anthropic_api_key");
-    if (stored) setAiKey(stored);
-  }, []);
-
-  useEffect(() => {
-    window.localStorage.setItem("storiaverso:anthropic_api_key", aiKey);
-  }, [aiKey]);
 
 
   const [mobileTab, setMobileTab] = useState<"form" | "preview">("form");
@@ -218,7 +263,7 @@ export default function WorldSheetView({ sheet, setSheet }: Props) {
   const generateAI = async () => {
     setAiError(""); setAiLoading(true); setAiOut("");
     try {
-      const { text } = await generateExpansion({ data: { preview, anthropicApiKey: aiKey || undefined } });
+      const text = await callAIExpansion(preview);
       setAiOut(text);
     } catch (e) {
       setAiError(e instanceof Error ? e.message : String(e));
@@ -555,31 +600,9 @@ export default function WorldSheetView({ sheet, setSheet }: Props) {
           {/* AI */}
           <section className="grimoire-card p-5">
             <h3 className="font-serif text-xl text-[color:var(--amber-accent)] mb-3">Expansão com IA</h3>
-            <div className="space-y-3 mb-4">
-              <label className="block space-y-1.5">
-                <span className="text-xs uppercase tracking-wider text-[color:var(--muted-foreground)]">Chave da Anthropic (opcional — deixe em branco para usar Lovable AI)</span>
-                <div className="relative">
-                  <input
-                    type={showKey ? "text" : "password"}
-                    className="field-input w-full pr-10"
-                    value={aiKey}
-                    onChange={(e) => setAiKey(e.target.value)}
-                    placeholder="sk-ant-api03-..."
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowKey(!showKey)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)]"
-                    aria-label={showKey ? "Ocultar chave" : "Mostrar chave"}
-                  >
-                    {showKey ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-              </label>
-            </div>
             <div className="flex gap-2">
               <Button onClick={generateAI} disabled={aiLoading}>
-                <Sparkles size={14} />{aiLoading ? "Gerando..." : aiKey ? "✦ Gerar com Anthropic" : "✦ Gerar expansão"}
+                <Sparkles size={14} />{aiLoading ? "Gerando..." : "✦ Gerar expansão com IA"}
               </Button>
               {aiOut && <Button variant="outline" onClick={exportAI}><Download size={14} />Baixar TXT</Button>}
             </div>

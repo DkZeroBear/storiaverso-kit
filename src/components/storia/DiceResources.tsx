@@ -369,7 +369,14 @@ function DiceMode({ onSaved }: Props) {
 
           <div className="mt-8 min-h-[180px] flex items-center justify-center relative">
             {isConventional(sidesOf(activeType)) ? (
-              <DiceRenderer sides={sidesOf(activeType)} isRolling={rolling} onRollComplete={handleRollComplete} size={160} />
+              <DiceRenderer
+                sides={sidesOf(activeType)}
+                isRolling={rolling}
+                onRollComplete={handleRollComplete}
+                result={result?.total ?? null}
+                showResult={!rolling && !!result}
+                size={160}
+              />
             ) : (
               <UnknownDice
                 sides={sidesOf(activeType)}
@@ -378,11 +385,6 @@ function DiceMode({ onSaved }: Props) {
                 result={result?.total ?? null}
                 onRollComplete={handleRollComplete}
               />
-            )}
-            {!rolling && result && isConventional(sidesOf(activeType)) && (
-              <div className="dice-result-overlay">
-                <span className="dice-result-overlay-number">{result.total}</span>
-              </div>
             )}
           </div>
 
