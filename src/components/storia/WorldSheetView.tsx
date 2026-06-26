@@ -600,31 +600,9 @@ export default function WorldSheetView({ sheet, setSheet }: Props) {
           {/* AI */}
           <section className="grimoire-card p-5">
             <h3 className="font-serif text-xl text-[color:var(--amber-accent)] mb-3">Expansão com IA</h3>
-            <div className="space-y-3 mb-4">
-              <label className="block space-y-1.5">
-                <span className="text-xs uppercase tracking-wider text-[color:var(--muted-foreground)]">Chave da Anthropic (opcional — deixe em branco para usar Lovable AI)</span>
-                <div className="relative">
-                  <input
-                    type={showKey ? "text" : "password"}
-                    className="field-input w-full pr-10"
-                    value={aiKey}
-                    onChange={(e) => setAiKey(e.target.value)}
-                    placeholder="sk-ant-api03-..."
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowKey(!showKey)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)]"
-                    aria-label={showKey ? "Ocultar chave" : "Mostrar chave"}
-                  >
-                    {showKey ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-              </label>
-            </div>
             <div className="flex gap-2">
               <Button onClick={generateAI} disabled={aiLoading}>
-                <Sparkles size={14} />{aiLoading ? "Gerando..." : aiKey ? "✦ Gerar com Anthropic" : "✦ Gerar expansão"}
+                <Sparkles size={14} />{aiLoading ? "Gerando..." : "✦ Gerar expansão com IA"}
               </Button>
               {aiOut && <Button variant="outline" onClick={exportAI}><Download size={14} />Baixar TXT</Button>}
             </div>
