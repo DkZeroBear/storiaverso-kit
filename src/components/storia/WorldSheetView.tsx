@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Plus, Trash2, Download, Upload, Sparkles, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { uid } from "@/lib/storia/storage";
@@ -7,8 +7,6 @@ import type { WorldSheet, People, Kingdom, HistEvent, Threat, Creature, RpgResou
 const ANTHROPIC_API_KEY = "SUA_CHAVE_AQUI";
 
 
-
-type Setter = (next: WorldSheet) => void;
 
 interface Props {
   sheet: WorldSheet;
@@ -153,8 +151,6 @@ function download(filename: string, content: string, type = "text/plain") {
 }
 
 export default function WorldSheetView({ sheet, setSheet }: Props) {
-  const set: Setter = (next) => setSheet(next);
-
   const update = useCallback(
     <K extends keyof WorldSheet>(key: K, value: WorldSheet[K]) =>
       setSheet((prev) => ({ ...prev, [key]: value })),
