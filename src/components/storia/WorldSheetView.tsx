@@ -6,59 +6,6 @@ import type { WorldSheet, People, Kingdom, HistEvent, Threat, Creature, RpgResou
 
 const ANTHROPIC_API_KEY = "SUA_CHAVE_AQUI";
 
-async function callAIExpansion(preview: string): Promise<string> {
-  const prompt = `Você é um assistente do framework STORIAverso de worldbuilding e RPG.
-Com base nos dados do mundo abaixo, gere uma expansão narrativa com exatamente estas seções:
-
-**Segredo oculto do mundo**
-[1 parágrafo — algo que contradiz ou aprofunda o que foi construído]
-
-**Dois locais icônicos**
-1. [nome]: [descrição em 2-3 linhas — habitat, atmosfera, função narrativa]
-2. [nome]: [descrição em 2-3 linhas]
-
-**Mito fundador**
-[1 parágrafo — uma lenda que os povos contam sobre a origem de algo]
-
-**Dois ganchos de aventura**
-1. [gancho — situação concreta que exige decisão dos personagens]
-2. [gancho]
-
-**Verbos centrais sugeridos para o sistema de RPG**
-[3 a 5 verbos com justificativa breve de por que emergem desse mundo]
-
-**Uma contradição potencial entre pilares**
-[algo que pode ser um conflito narrativo interessante — não um erro]
-
-Seja coerente com o tom e a mitologia definidos. Sem texto fora dessas seções.
-
-Dados do mundo:
-${preview}`;
-
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: 1500,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
-
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`Erro da API (${response.status}): ${err.slice(0, 200)}`);
-  }
-
-  const data = await response.json();
-  const text = data?.content?.find((c: { type: string; text?: string }) => c.type === "text")?.text;
-  return text ?? "(resposta vazia)";
-}
 
 
 type Setter = (next: WorldSheet) => void;
@@ -261,9 +208,63 @@ export default function WorldSheetView({ sheet, setSheet }: Props) {
   };
 
   const generateAI = async () => {
-    setAiError(""); setAiLoading(true); setAiOut("");
+    setAiError("");
+    setAiLoading(true);
+    setAiOut("");
     try {
-      const text = await callAIExpansion(preview);
+      const prompt = `Você é um assistente do framework STORIAverso de worldbuilding e RPG.
+Com base nos dados do mundo abaixo, gere uma expansão narrativa com exatamente estas seções:
+
+**Segredo oculto do mundo**
+[1 parágrafo — algo que contradiz ou aprofunda o que foi construído]
+
+**Dois locais icônicos**
+1. [nome]: [descrição em 2-3 linhas — habitat, atmosfera, função narrativa]
+2. [nome]: [descrição em 2-3 linhas]
+
+**Mito fundador**
+[1 parágrafo — uma lenda que os povos contam sobre a origem de algo]
+
+**Dois ganchos de aventura**
+1. [gancho — situação concreta que exige decisão dos personagens]
+2. [gancho]
+
+**Verbos centrais sugeridos para o sistema de RPG**
+[3 a 5 verbos com justificativa breve de por que emergem desse mundo]
+
+**Uma contradição potencial entre pilares**
+[algo que pode ser um conflito narrativo interessante — não um erro]
+
+Seja coerente com o tom e a mitologia definidos. Sem texto fora dessas seções.
+
+Dados do mundo:
+${preview}`;
+
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 1500,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.text();
+        throw new Error(`Erro da API (${response.status}): ${err.slice(0, 200)}`);
+      }
+
+      const data = await response.json();
+      const text =
+        data?.content?.find(
+          (c: { type: string; text?: string }) => c.type === "text"
+        )?.text ?? "(resposta vazia)";
       setAiOut(text);
     } catch (e) {
       setAiError(e instanceof Error ? e.message : String(e));
@@ -271,6 +272,7 @@ export default function WorldSheetView({ sheet, setSheet }: Props) {
       setAiLoading(false);
     }
   };
+
 
 
   const exportJSON = () => {
@@ -602,15 +604,25 @@ export default function WorldSheetView({ sheet, setSheet }: Props) {
             <h3 className="font-serif text-xl text-[color:var(--amber-accent)] mb-3">Expansão com IA</h3>
             <div className="flex gap-2">
               <Button onClick={generateAI} disabled={aiLoading}>
-                <Sparkles size={14} />{aiLoading ? "Gerando..." : "✦ Gerar expansão com IA"}
+                <Sparkles size={14} />{aiLoading ? "Gerando..." : "✦ Gerar expansão"}
               </Button>
-              {aiOut && <Button variant="outline" onClick={exportAI}><Download size={14} />Baixar TXT</Button>}
+              {aiOut && (
+                <Button variant="outline" onClick={exportAI}>
+                  <Download size={14} />Baixar TXT
+                </Button>
+              )}
             </div>
-            {aiError && <p className="text-sm text-[color:var(--destructive)] mt-3">{aiError}</p>}
+
+            {aiError && (
+              <p className="text-sm text-[color:var(--destructive)] mt-3">{aiError}</p>
+            )}
             {aiOut && (
-              <pre className="whitespace-pre-wrap text-sm mt-4 p-4 bg-[color:var(--muted)] rounded-md font-sans leading-relaxed">{aiOut}</pre>
+              <pre className="whitespace-pre-wrap text-sm mt-4 p-4 bg-[color:var(--muted)] rounded-md font-sans leading-relaxed">
+                {aiOut}
+              </pre>
             )}
           </section>
+
 
         </div>
 
