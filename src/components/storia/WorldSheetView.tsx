@@ -604,15 +604,25 @@ ${preview}`;
             <h3 className="font-serif text-xl text-[color:var(--amber-accent)] mb-3">Expansão com IA</h3>
             <div className="flex gap-2">
               <Button onClick={generateAI} disabled={aiLoading}>
-                <Sparkles size={14} />{aiLoading ? "Gerando..." : "✦ Gerar expansão com IA"}
+                <Sparkles size={14} />{aiLoading ? "Gerando..." : "✦ Gerar expansão"}
               </Button>
-              {aiOut && <Button variant="outline" onClick={exportAI}><Download size={14} />Baixar TXT</Button>}
+              {aiOut && (
+                <Button variant="outline" onClick={exportAI}>
+                  <Download size={14} />Baixar TXT
+                </Button>
+              )}
             </div>
-            {aiError && <p className="text-sm text-[color:var(--destructive)] mt-3">{aiError}</p>}
+
+            {aiError && (
+              <p className="text-sm text-[color:var(--destructive)] mt-3">{aiError}</p>
+            )}
             {aiOut && (
-              <pre className="whitespace-pre-wrap text-sm mt-4 p-4 bg-[color:var(--muted)] rounded-md font-sans leading-relaxed">{aiOut}</pre>
+              <pre className="whitespace-pre-wrap text-sm mt-4 p-4 bg-[color:var(--muted)] rounded-md font-sans leading-relaxed">
+                {aiOut}
+              </pre>
             )}
           </section>
+
 
         </div>
 
